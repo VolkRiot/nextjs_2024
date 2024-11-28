@@ -2,6 +2,7 @@
 const nextConfig = {
     experimental: {
         ppr: 'incremental',
+        missingSuspenseWithCSRBailout: false
       },
 };
 
