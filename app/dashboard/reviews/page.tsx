@@ -12,7 +12,7 @@ export default function Page() {
       <div className="space-y-4">
         {reviews.map((review, index) => (
           <div key={index} className="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
-            <p className="text-gray-700 italic">"{review}"</p>
+            <p className="text-gray-700 italic">{review}</p>
           </div>
         ))}
       </div>
