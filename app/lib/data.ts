@@ -204,6 +204,7 @@ export async function fetchFilteredCustomers(
   ];
 
   const effectiveSortBy = sortByWhitelist.includes(sortBy) ? sortBy : 'name';
+  const effectiveSortOrder = sortOrder === 'DESC' ? 'DESC' : 'ASC';
 
   try {
     const data = await sql.query<CustomersTableType>(`
@@ -221,9 +222,9 @@ export async function fetchFilteredCustomers(
 		  customers.name ILIKE $1 OR
       customers.email ILIKE $1
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY ${effectiveSortBy} ${sortOrder === 'DESC' ? 'DESC' : 'ASC'}
-    LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-	  `, [`%${query}%`]);
+		ORDER BY ${effectiveSortBy} ${effectiveSortOrder}
+    LIMIT $2 OFFSET $3
+	  `, [`%${query}%`, ITEMS_PER_PAGE, offset]);
 
     const customers = data.rows.map((customer) => ({
       ...customer,

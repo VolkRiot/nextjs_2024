@@ -5,6 +5,56 @@ import { FormattedCustomersTable } from '@/app/lib/definitions';
 import { fetchFilteredCustomers } from '@/app/lib/data';
 import Link from 'next/link';
 
+const getSortHref = (
+  field: string,
+  query: string,
+  sortBy: string,
+  sortOrder: 'ASC' | 'DESC',
+  currentPage: number,
+) => {
+  const params = new URLSearchParams();
+  if (query) params.set('query', query);
+  if (currentPage > 1) params.set('page', currentPage.toString());
+  params.set('sortBy', field);
+  params.set(
+    'sortOrder',
+    sortBy === field && sortOrder === 'ASC' ? 'DESC' : 'ASC',
+  );
+  return `?${params.toString()}`;
+};
+
+const SortableHeader = ({
+  field,
+  children,
+  className,
+  query,
+  sortBy,
+  sortOrder,
+  currentPage,
+}: {
+  field: string;
+  children: React.ReactNode;
+  className?: string;
+  query: string;
+  sortBy: string;
+  sortOrder: 'ASC' | 'DESC';
+  currentPage: number;
+}) => {
+  return (
+    <th scope="col" className={className || 'px-3 py-5 font-medium'}>
+      <Link
+        href={getSortHref(field, query, sortBy, sortOrder, currentPage)}
+        className="flex items-center gap-1 hover:text-gray-600"
+      >
+        {children}
+        {sortBy === field && (
+          <span>{sortOrder === 'ASC' ? ' ↑' : ' ↓'}</span>
+        )}
+      </Link>
+    </th>
+  );
+};
+
 export default async function CustomersTable({
   query,
   sortBy,
@@ -22,42 +72,6 @@ export default async function CustomersTable({
     sortOrder,
     currentPage,
   );
-
-  const getSortHref = (field: string) => {
-    const params = new URLSearchParams();
-    if (query) params.set('query', query);
-    if (currentPage > 1) params.set('page', currentPage.toString());
-    params.set('sortBy', field);
-    params.set(
-      'sortOrder',
-      sortBy === field && sortOrder === 'ASC' ? 'DESC' : 'ASC',
-    );
-    return `?${params.toString()}`;
-  };
-
-  const SortableHeader = ({
-    field,
-    children,
-    className,
-  }: {
-    field: string;
-    children: React.ReactNode;
-    className?: string;
-  }) => {
-    return (
-      <th scope="col" className={className || 'px-3 py-5 font-medium'}>
-        <Link
-          href={getSortHref(field)}
-          className="flex items-center gap-1 hover:text-gray-600"
-        >
-          {children}
-          {sortBy === field && (
-            <span>{sortOrder === 'ASC' ? ' ↑' : ' ↓'}</span>
-          )}
-        </Link>
-      </th>
-    );
-  };
 
   return (
     <div className="w-full">
@@ -116,17 +130,47 @@ export default async function CustomersTable({
                     <SortableHeader
                       field="name"
                       className="px-4 py-5 font-medium sm:pl-6"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
                     >
                       Name
                     </SortableHeader>
-                    <SortableHeader field="email">Email</SortableHeader>
-                    <SortableHeader field="total_invoices">
+                    <SortableHeader
+                      field="email"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
+                      Email
+                    </SortableHeader>
+                    <SortableHeader
+                      field="total_invoices"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
                       Total Invoices
                     </SortableHeader>
-                    <SortableHeader field="total_pending">
+                    <SortableHeader
+                      field="total_pending"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
                       Total Pending
                     </SortableHeader>
-                    <SortableHeader field="total_paid">
+                    <SortableHeader
+                      field="total_paid"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
                       Total Paid
                     </SortableHeader>
                   </tr>
