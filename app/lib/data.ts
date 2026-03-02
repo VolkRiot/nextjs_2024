@@ -192,7 +192,9 @@ export async function fetchFilteredCustomers(
   query: string,
   sortBy: string = 'name',
   sortOrder: 'ASC' | 'DESC' = 'ASC',
+  currentPage: number = 1,
 ) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
   const sortByWhitelist = [
     'name',
     'email',
@@ -200,31 +202,87 @@ export async function fetchFilteredCustomers(
     'total_pending',
     'total_paid',
   ];
-  const orderWhitelist = ['ASC', 'DESC'];
 
   const effectiveSortBy = sortByWhitelist.includes(sortBy) ? sortBy : 'name';
-  const effectiveSortOrder = orderWhitelist.includes(sortOrder)
-    ? sortOrder
-    : 'ASC';
 
   try {
-    const data = await sql.query<CustomersTableType>(`
-		SELECT
-		  customers.id,
-		  customers.name,
-		  customers.email,
-		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
-		FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
-		WHERE
-		  customers.name ILIKE $1 OR
-      customers.email ILIKE $1
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY ${effectiveSortBy} ${effectiveSortOrder}
-	  `, [`%${query}%`]);
+    const queryStr = `%${query}%`;
+    let data;
+    if (sortOrder === 'DESC') {
+      if (effectiveSortBy === 'email') {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY email DESC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      } else if (effectiveSortBy === 'total_invoices') {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY total_invoices DESC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      } else if (effectiveSortBy === 'total_pending') {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY total_pending DESC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      } else if (effectiveSortBy === 'total_paid') {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY total_paid DESC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      } else {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY name DESC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      }
+    } else {
+      if (effectiveSortBy === 'email') {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY email ASC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      } else if (effectiveSortBy === 'total_invoices') {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY total_invoices ASC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      } else if (effectiveSortBy === 'total_pending') {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY total_pending ASC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      } else if (effectiveSortBy === 'total_paid') {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY total_paid ASC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      } else {
+        data = await sql<CustomersTableType>`
+          SELECT customers.id, customers.name, customers.email, customers.image_url, COUNT(invoices.id) AS total_invoices, SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending, SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          FROM customers LEFT JOIN invoices ON customers.id = invoices.customer_id
+          WHERE customers.name ILIKE ${queryStr} OR customers.email ILIKE ${queryStr}
+          GROUP BY customers.id, customers.name, customers.email, customers.image_url
+          ORDER BY name ASC LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}`;
+      }
+    }
 
     const customers = data.rows.map((customer) => ({
       ...customer,
@@ -236,6 +294,23 @@ export async function fetchFilteredCustomers(
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
+  }
+}
+
+export async function fetchCustomersPages(query: string) {
+  try {
+    const count = await sql`SELECT COUNT(*)
+    FROM customers
+    WHERE
+      customers.name ILIKE ${`%${query}%`} OR
+      customers.email ILIKE ${`%${query}%`}
+  `;
+
+    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of customer pages.');
   }
 }
 

@@ -9,20 +9,24 @@ export default async function CustomersTable({
   query,
   sortBy,
   sortOrder,
+  currentPage,
 }: {
   query: string;
   sortBy: string;
   sortOrder: 'ASC' | 'DESC';
+  currentPage: number;
 }) {
   const customers: FormattedCustomersTable[] = await fetchFilteredCustomers(
     query,
     sortBy,
     sortOrder,
+    currentPage,
   );
 
   const getSortHref = (field: string) => {
     const params = new URLSearchParams();
     if (query) params.set('query', query);
+    if (currentPage > 1) params.set('page', currentPage.toString());
     params.set('sortBy', field);
     params.set(
       'sortOrder',
@@ -34,12 +38,14 @@ export default async function CustomersTable({
   const SortableHeader = ({
     field,
     children,
+    className,
   }: {
     field: string;
     children: React.ReactNode;
+    className?: string;
   }) => {
     return (
-      <th scope="col" className="px-3 py-5 font-medium">
+      <th scope="col" className={className || 'px-3 py-5 font-medium'}>
         <Link
           href={getSortHref(field)}
           className="flex items-center gap-1 hover:text-gray-600"
@@ -107,20 +113,12 @@ export default async function CustomersTable({
               <table className="hidden min-w-full rounded-md text-gray-900 md:table">
                 <thead className="rounded-md bg-gray-50 text-left text-sm font-normal">
                   <tr>
-                    <th
-                      scope="col"
+                    <SortableHeader
+                      field="name"
                       className="px-4 py-5 font-medium sm:pl-6"
                     >
-                      <Link
-                        href={getSortHref('name')}
-                        className="flex items-center gap-1 hover:text-gray-600"
-                      >
-                        Name
-                        {sortBy === 'name' && (
-                          <span>{sortOrder === 'ASC' ? ' ↑' : ' ↓'}</span>
-                        )}
-                      </Link>
-                    </th>
+                      Name
+                    </SortableHeader>
                     <SortableHeader field="email">Email</SortableHeader>
                     <SortableHeader field="total_invoices">
                       Total Invoices
