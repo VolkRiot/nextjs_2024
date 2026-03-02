@@ -5,6 +5,7 @@ import {
   HashtagIcon,
   PresentationChartBarIcon,
 } from '@heroicons/react/24/outline';
+import { Card } from '@/app/ui/dashboard/cards';
 
 export default async function Page() {
   return (
@@ -13,25 +14,25 @@ export default async function Page() {
         Business Analytics
       </h1>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <AnalyticsCard
+        <Card
           title="Total Revenue"
           value="$45,231.89"
-          type="revenue"
+          icon={CurrencyDollarIcon}
         />
-        <AnalyticsCard
+        <Card
           title="Active Users"
           value="2,350"
-          type="users"
+          icon={UserGroupIcon}
         />
-        <AnalyticsCard
+        <Card
           title="New Orders"
           value="+12.5%"
-          type="orders"
+          icon={HashtagIcon}
         />
-        <AnalyticsCard
+        <Card
           title="Conversion Rate"
           value="3.2%"
-          type="conversion"
+          icon={PresentationChartBarIcon}
         />
       </div>
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
@@ -67,39 +68,5 @@ export default async function Page() {
         </div>
       </div>
     </main>
-  );
-}
-
-const iconMap = {
-  revenue: CurrencyDollarIcon,
-  users: UserGroupIcon,
-  orders: HashtagIcon,
-  conversion: PresentationChartBarIcon,
-};
-
-function AnalyticsCard({
-  title,
-  value,
-  type,
-}: {
-  title: string;
-  value: string | number;
-  type: 'revenue' | 'users' | 'orders' | 'conversion';
-}) {
-  const Icon = iconMap[type];
-
-  return (
-    <div className="rounded-xl bg-gray-50 p-2 shadow-sm">
-      <div className="flex p-4">
-        {Icon ? <Icon className="h-5 w-5 text-gray-700" /> : null}
-        <h3 className="ml-2 text-sm font-medium">{title}</h3>
-      </div>
-      <p
-        className={`${lusitana.className}
-          truncate rounded-xl bg-white px-4 py-8 text-center text-2xl`}
-      >
-        {value}
-      </p>
-    </div>
   );
 }
