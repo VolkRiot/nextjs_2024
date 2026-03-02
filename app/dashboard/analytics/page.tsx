@@ -40,7 +40,7 @@ export default async function Page() {
             Monthly Performance
           </h2>
           <div className="rounded-xl bg-gray-50 p-4">
-             <div className="h-64 flex items-center justify-center bg-white rounded-md border border-dashed border-gray-300">
+             <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-gray-300 bg-white">
                 <p className="text-gray-500">Placeholder for Monthly Growth Chart</p>
              </div>
           </div>
