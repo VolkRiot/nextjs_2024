@@ -1,16 +1,58 @@
 import Image from 'next/image';
 import { lusitana } from '@/app/ui/fonts';
 import Search from '@/app/ui/search';
-import {
-  CustomersTableType,
-  FormattedCustomersTable,
-} from '@/app/lib/definitions';
+import { FormattedCustomersTable } from '@/app/lib/definitions';
+import { fetchFilteredCustomers } from '@/app/lib/data';
+import Link from 'next/link';
 
 export default async function CustomersTable({
-  customers,
+  query,
+  sortBy,
+  sortOrder,
 }: {
-  customers: FormattedCustomersTable[];
+  query: string;
+  sortBy: string;
+  sortOrder: 'ASC' | 'DESC';
 }) {
+  const customers: FormattedCustomersTable[] = await fetchFilteredCustomers(
+    query,
+    sortBy,
+    sortOrder,
+  );
+
+  const getSortHref = (field: string) => {
+    const params = new URLSearchParams();
+    if (query) params.set('query', query);
+    params.set('sortBy', field);
+    params.set(
+      'sortOrder',
+      sortBy === field && sortOrder === 'ASC' ? 'DESC' : 'ASC',
+    );
+    return `?${params.toString()}`;
+  };
+
+  const SortableHeader = ({
+    field,
+    children,
+  }: {
+    field: string;
+    children: React.ReactNode;
+  }) => {
+    return (
+      <th scope="col" className="px-3 py-5 font-medium">
+        <Link
+          href={getSortHref(field)}
+          className="flex items-center gap-1 hover:text-gray-600"
+        >
+          {children}
+          {sortBy === field && (
+            <span>{sortOrder === 'ASC' ? ' ↑' : ' ↓'}</span>
+          )}
+        </Link>
+      </th>
+    );
+  };
+
   return (
     <div className="w-full">
       <h1 className={`${lusitana.className} mb-8 text-xl md:text-2xl`}>
@@ -65,21 +107,30 @@ export default async function CustomersTable({
               <table className="hidden min-w-full rounded-md text-gray-900 md:table">
                 <thead className="rounded-md bg-gray-50 text-left text-sm font-normal">
                   <tr>
-                    <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                      Name
+                    <th
+                      scope="col"
+                      className="px-4 py-5 font-medium sm:pl-6"
+                    >
+                      <Link
+                        href={getSortHref('name')}
+                        className="flex items-center gap-1 hover:text-gray-600"
+                      >
+                        Name
+                        {sortBy === 'name' && (
+                          <span>{sortOrder === 'ASC' ? ' ↑' : ' ↓'}</span>
+                        )}
+                      </Link>
                     </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                      Email
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
+                    <SortableHeader field="email">Email</SortableHeader>
+                    <SortableHeader field="total_invoices">
                       Total Invoices
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
+                    </SortableHeader>
+                    <SortableHeader field="total_pending">
                       Total Pending
-                    </th>
-                    <th scope="col" className="px-4 py-5 font-medium">
+                    </SortableHeader>
+                    <SortableHeader field="total_paid">
                       Total Paid
-                    </th>
+                    </SortableHeader>
                   </tr>
                 </thead>
 

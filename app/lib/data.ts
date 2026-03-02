@@ -188,9 +188,27 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchFilteredCustomers(
+  query: string,
+  sortBy: string = 'name',
+  sortOrder: 'ASC' | 'DESC' = 'ASC',
+) {
+  const sortByWhitelist = [
+    'name',
+    'email',
+    'total_invoices',
+    'total_pending',
+    'total_paid',
+  ];
+  const orderWhitelist = ['ASC', 'DESC'];
+
+  const effectiveSortBy = sortByWhitelist.includes(sortBy) ? sortBy : 'name';
+  const effectiveSortOrder = orderWhitelist.includes(sortOrder)
+    ? sortOrder
+    : 'ASC';
+
   try {
-    const data = await sql<CustomersTableType>`
+    const data = await sql.query<CustomersTableType>(`
 		SELECT
 		  customers.id,
 		  customers.name,
@@ -202,11 +220,11 @@ export async function fetchFilteredCustomers(query: string) {
 		FROM customers
 		LEFT JOIN invoices ON customers.id = invoices.customer_id
 		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
+		  customers.name ILIKE $1 OR
+      customers.email ILIKE $1
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `;
+		ORDER BY ${effectiveSortBy} ${effectiveSortOrder}
+	  `, [`%${query}%`]);
 
     const customers = data.rows.map((customer) => ({
       ...customer,
