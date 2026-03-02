@@ -1,16 +1,78 @@
 import Image from 'next/image';
 import { lusitana } from '@/app/ui/fonts';
 import Search from '@/app/ui/search';
-import {
-  CustomersTableType,
-  FormattedCustomersTable,
-} from '@/app/lib/definitions';
+import { FormattedCustomersTable } from '@/app/lib/definitions';
+import { fetchFilteredCustomers } from '@/app/lib/data';
+import Link from 'next/link';
+
+const getSortHref = (
+  field: string,
+  query: string,
+  sortBy: string,
+  sortOrder: 'ASC' | 'DESC',
+  currentPage: number,
+) => {
+  const params = new URLSearchParams();
+  if (query) params.set('query', query);
+  if (currentPage > 1) params.set('page', currentPage.toString());
+  params.set('sortBy', field);
+  params.set(
+    'sortOrder',
+    sortBy === field && sortOrder === 'ASC' ? 'DESC' : 'ASC',
+  );
+  return `?${params.toString()}`;
+};
+
+const SortableHeader = ({
+  field,
+  children,
+  className,
+  query,
+  sortBy,
+  sortOrder,
+  currentPage,
+}: {
+  field: string;
+  children: React.ReactNode;
+  className?: string;
+  query: string;
+  sortBy: string;
+  sortOrder: 'ASC' | 'DESC';
+  currentPage: number;
+}) => {
+  return (
+    <th scope="col" className={className || 'px-3 py-5 font-medium'}>
+      <Link
+        href={getSortHref(field, query, sortBy, sortOrder, currentPage)}
+        className="flex items-center gap-1 hover:text-gray-600"
+      >
+        {children}
+        {sortBy === field && (
+          <span>{sortOrder === 'ASC' ? ' ↑' : ' ↓'}</span>
+        )}
+      </Link>
+    </th>
+  );
+};
 
 export default async function CustomersTable({
-  customers,
+  query,
+  sortBy,
+  sortOrder,
+  currentPage,
 }: {
-  customers: FormattedCustomersTable[];
+  query: string;
+  sortBy: string;
+  sortOrder: 'ASC' | 'DESC';
+  currentPage: number;
 }) {
+  const customers: FormattedCustomersTable[] = await fetchFilteredCustomers(
+    query,
+    sortBy,
+    sortOrder,
+    currentPage,
+  );
+
   return (
     <div className="w-full">
       <h1 className={`${lusitana.className} mb-8 text-xl md:text-2xl`}>
@@ -65,21 +127,52 @@ export default async function CustomersTable({
               <table className="hidden min-w-full rounded-md text-gray-900 md:table">
                 <thead className="rounded-md bg-gray-50 text-left text-sm font-normal">
                   <tr>
-                    <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
+                    <SortableHeader
+                      field="name"
+                      className="px-4 py-5 font-medium sm:pl-6"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
                       Name
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
+                    </SortableHeader>
+                    <SortableHeader
+                      field="email"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
                       Email
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
+                    </SortableHeader>
+                    <SortableHeader
+                      field="total_invoices"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
                       Total Invoices
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
+                    </SortableHeader>
+                    <SortableHeader
+                      field="total_pending"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
                       Total Pending
-                    </th>
-                    <th scope="col" className="px-4 py-5 font-medium">
+                    </SortableHeader>
+                    <SortableHeader
+                      field="total_paid"
+                      query={query}
+                      sortBy={sortBy}
+                      sortOrder={sortOrder}
+                      currentPage={currentPage}
+                    >
                       Total Paid
-                    </th>
+                    </SortableHeader>
                   </tr>
                 </thead>
 

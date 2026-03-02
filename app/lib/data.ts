@@ -188,9 +188,26 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchFilteredCustomers(
+  query: string,
+  sortBy: string = 'name',
+  sortOrder: 'ASC' | 'DESC' = 'ASC',
+  currentPage: number = 1,
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const sortByWhitelist = [
+    'name',
+    'email',
+    'total_invoices',
+    'total_pending',
+    'total_paid',
+  ];
+
+  const effectiveSortBy = sortByWhitelist.includes(sortBy) ? sortBy : 'name';
+  const effectiveSortOrder = sortOrder === 'DESC' ? 'DESC' : 'ASC';
+
   try {
-    const data = await sql<CustomersTableType>`
+    const data = await sql.query<CustomersTableType>(`
 		SELECT
 		  customers.id,
 		  customers.name,
@@ -202,11 +219,12 @@ export async function fetchFilteredCustomers(query: string) {
 		FROM customers
 		LEFT JOIN invoices ON customers.id = invoices.customer_id
 		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
+		  customers.name ILIKE $1 OR
+      customers.email ILIKE $1
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `;
+		ORDER BY ${effectiveSortBy} ${effectiveSortOrder}
+    LIMIT $2 OFFSET $3
+	  `, [`%${query}%`, ITEMS_PER_PAGE, offset]);
 
     const customers = data.rows.map((customer) => ({
       ...customer,
@@ -218,6 +236,23 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
+  }
+}
+
+export async function fetchCustomersPages(query: string) {
+  try {
+    const count = await sql`SELECT COUNT(*)
+    FROM customers
+    WHERE
+      customers.name ILIKE ${`%${query}%`} OR
+      customers.email ILIKE ${`%${query}%`}
+  `;
+
+    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of customer pages.');
   }
 }
 
