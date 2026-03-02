@@ -57,8 +57,8 @@ export default async function Page() {
                   { name: 'Mobile App Pro', sales: 621 },
                   { name: 'Analytics API', sales: 435 },
                   { name: 'Custom Support', sales: 125 },
-                ].map((item, i) => (
-                  <li key={i} className="py-3 flex justify-between items-center">
+                ].map((item) => (
+                  <li key={item.name} className="py-3 flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900">{item.name}</span>
                     <span className="text-sm text-gray-500">{item.sales} sales</span>
                   </li>
